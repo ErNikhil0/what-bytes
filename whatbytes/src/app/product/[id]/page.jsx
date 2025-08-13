@@ -1,3 +1,4 @@
+'use client';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { products } from '@/data/products';
@@ -112,4 +113,5 @@ export default function ProductDetail() {
       <Footer />
     </div>
   );
+
 }
