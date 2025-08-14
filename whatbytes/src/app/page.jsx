@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,7 +8,7 @@ import ProductCard from '@/components/ProductCard';
 import Sidebar from '@/components/Sidebar';
 import { products } from '@/data/products';
 
-export default function Home() {
+function ProductListingContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -18,42 +18,30 @@ export default function Home() {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Extract unique categories
+
   const categories = [...new Set(products.map(p => p.category))];
 
-  // Apply filters when URL params change
+
   useEffect(() => {
     const category = searchParams.getAll('category');
     const price = searchParams.get('price');
     const search = searchParams.get('search');
     
-    if (category.length > 0) {
-      setSelectedCategories(category);
-    }
-    
-    if (price) {
-      const [min, max] = price.split('-').map(Number);
-      setPriceRange([min, max]);
-    }
-    
-    if (search) {
-      setSearchQuery(search);
-    }
+    if (category.length > 0) setSelectedCategories(category);
+    if (price) setPriceRange(price.split('-').map(Number));
+    if (search) setSearchQuery(search);
   }, [searchParams]);
 
-  // Filter products based on selected criteria
+
   useEffect(() => {
     let result = products;
     
-    // Category filter
     if (selectedCategories.length > 0) {
       result = result.filter(p => selectedCategories.includes(p.category));
     }
     
-    // Price filter
     result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
     
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(p => 
@@ -64,53 +52,38 @@ export default function Home() {
     
     setFilteredProducts(result);
     
-    // Update URL with current filters
-    const params = new URLSearchParams(searchParams);
-    params.delete('category');
+  L
+    const params = new URLSearchParams();
     selectedCategories.forEach(cat => params.append('category', cat));
     
     if (priceRange[0] !== 0 || priceRange[1] !== 1000) {
       params.set('price', `${priceRange[0]}-${priceRange[1]}`);
-    } else {
-      params.delete('price');
     }
     
-    if (searchQuery) {
-      params.set('search', searchQuery);
-    } else {
-      params.delete('search');
-    }
+    if (searchQuery) params.set('search', searchQuery);
     
     router.replace(`${pathname}?${params.toString()}`);
-  }, [selectedCategories, priceRange, searchQuery, pathname, router, searchParams]);
+  }, [selectedCategories, priceRange, searchQuery, pathname, router]);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = (query) => setSearchQuery(query);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header onSearch={handleSearch} />
       <main className="flex-grow container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar - Collapses on mobile */}
-          <div className="w-full md:w-64">
-            <Sidebar 
-              categories={categories}
-              selectedCategories={selectedCategories}
-              onCategoryChange={setSelectedCategories}
-              priceRange={priceRange}
-              onPriceChange={setPriceRange}
-            />
-          </div>
-          
-          {/* Main Content Area */}
+          <Sidebar 
+            categories={categories}
+            selectedCategories={selectedCategories}
+            onCategoryChange={setSelectedCategories}
+            priceRange={priceRange}
+            onPriceChange={setPriceRange}
+          />
           <div className="flex-1">
-            {/* No Products Found Message */}
             {filteredProducts.length === 0 ? (
               <div className="text-center py-10">
                 <h2 className="text-xl font-semibold text-gray-600">
-                  No products found. Try adjusting your filters.
+                  No products found
                 </h2>
                 <button 
                   onClick={() => {
@@ -124,12 +97,9 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              /* Product Grid - Responsive columns */
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map(product => (
-                  <div key={product.id} className="cursor-pointer hover:scale-[1.02] transition-transform duration-200">
-                    <ProductCard product={product} />
-                  </div>
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}
@@ -138,5 +108,13 @@ export default function Home() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <ProductListingContent />
+    </Suspense>
   );
 }
