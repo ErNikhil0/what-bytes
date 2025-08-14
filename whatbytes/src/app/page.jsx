@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import ProductCard from '@/components/ProductCard';
-import Sidebar from '@/components/Sidebar';
 import { products } from '@/data/products';
 
-function ProductListingContent() {
+const ProductCard = dynamic(() => import('@/components/ProductCard'), { ssr: false });
+const Sidebar = dynamic(() => import('@/components/Sidebar'), { 
+  ssr: false,
+  loading: () => <div className="w-full md:w-64 h-64 bg-gray-100 rounded-lg animate-pulse"></div>
+});
+
+export default function Home() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -18,14 +23,12 @@ function ProductListingContent() {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [searchQuery, setSearchQuery] = useState('');
 
-
   const categories = [...new Set(products.map(p => p.category))];
 
-
   useEffect(() => {
-    const category = searchParams.getAll('category');
-    const price = searchParams.get('price');
-    const search = searchParams.get('search');
+    const category = searchParams?.getAll('category') || [];
+    const price = searchParams?.get('price');
+    const search = searchParams?.get('search');
     
     if (category.length > 0) setSelectedCategories(category);
     if (price) setPriceRange(price.split('-').map(Number));
@@ -52,7 +55,7 @@ function ProductListingContent() {
     
     setFilteredProducts(result);
     
-  L
+
     const params = new URLSearchParams();
     selectedCategories.forEach(cat => params.append('category', cat));
     
@@ -108,13 +111,5 @@ function ProductListingContent() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={null}>
-      <ProductListingContent />
-    </Suspense>
   );
 }
