@@ -8,7 +8,7 @@ import ProductCard from '@/components/ProductCard';
 import Sidebar from '@/components/Sidebar';
 import { products } from '@/data/products';
 
-// Main content component that uses useSearchParams
+
 function ProductListing() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -19,10 +19,9 @@ function ProductListing() {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Extract unique categories
   const categories = [...new Set(products.map(p => p.category))];
 
-  // Apply filters when URL params change
+
   useEffect(() => {
     const category = searchParams.getAll('category');
     const price = searchParams.get('price');
@@ -33,7 +32,7 @@ function ProductListing() {
     if (search) setSearchQuery(search);
   }, [searchParams]);
 
-  // Filter products
+
   useEffect(() => {
     let result = products;
     
@@ -53,7 +52,7 @@ function ProductListing() {
     
     setFilteredProducts(result);
     
-    // Update URL
+    
     const params = new URLSearchParams(searchParams);
     params.delete('category');
     selectedCategories.forEach(cat => params.append('category', cat));
@@ -123,7 +122,7 @@ function ProductListing() {
   );
 }
 
-// Page component with Suspense boundary
+
 export default function HomePage() {
   return (
     <Suspense fallback={
